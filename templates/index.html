@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark ShareSync Cost Calculator</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+    
+        .logo-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    
+        .logo-container img {
+            max-width: 150px;
+            height: auto;
+        }
+    
+        h1 {
+            text-align: center;
+            margin-top: 30px;
+            color: #333;
+            font-size: 20px;
+            font-family: 'Epilogue', sans-serif;
+        }
+    
+        form {
+            background-color: #ffffff;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #af69f5;
+        }
+    
+        form label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        form .form-group span {
+            font-size: 14px; 
+            color: inherit; 
+            font-weight: normal; 
+        }
+    
+        form input[type="range"] {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            color-scheme: light;
+        }
+    
+        form select {
+            width: 100%;
+            padding: 10px;
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .results {
+            background-color: #f0f0f0;
+            border: 2px solid #af69f5;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+            
+        .results-on-prem {
+            border: 2px solid #af69f5;
+        }
+
+       
+        .results-spark {
+            background-color: rgba(235, 219, 252, 0.5);
+            border: 3px solid #edff79;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    
+        .smartcompute-label {
+            color: #af69f5;
+            font-size: 16px;
+        }
+    
+        .results-box {
+            margin-bottom: 20px;
+        }
+    
+        @media (max-width: 600px) {
+            form label, form input, form select {
+                width: 100%;
+            }
+        }
+
+        .accented {
+        accent-color: mediumorchid;
+        }
+
+        [color-scheme="dark"] .accented {
+        accent-color: hsl(328 100% 80%);
+        }
+
+        label {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1rem;
+        }
+
+        [color-scheme="light"] {
+        color-scheme: light;
+        }
+
+        [color-scheme="dark"] {
+        color-scheme: dark;
+        }
+
+
+
+        .results canvas {
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #af69f5;
+            text-align: center;
+            position: relative; /* For tooltip positioning */
+        }
+
+        th {
+            font-size: 70%;
+            color: rgb(235, 235, 235);
+        }
+
+        th:nth-child(1) {
+            background-color: rgba(175, 105, 245, 0.85);
+            color: #edff79;
+            font-weight: bold;
+        }
+
+        th:not(:nth-child(1)) {
+            font-weight: normal;
+        }
+
+        th:nth-child(2) {
+            background-color: rgba(255, 99, 99, 0.75);
+        }
+
+        th:nth-child(3) {
+            background-color: rgba(79, 191, 111, 0.75);
+        }
+
+        th:nth-child(4) {
+            background-color: #f9a31d;
+        }
+
+        th:nth-child(5) {
+            background-color: #2f704f;
+        }
+
+        th:nth-child(6) {
+            background-color: #007bff;
+        }
+
+        th.dropbox-na, th.google-drive-na {
+            background-color: #808080 !important;
+        }
+
+        td.na-cell {
+            background-color: #808080;
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        td#spark_cost {
+            color: #edff79;
+            font-weight: bold;
+        }
+        td {
+            font-size: 75%;
+        }
+
+        .accent {
+            accent-color: #af69f5;
+        }
+
+        .tooltip {
+            display: none;
+            position: absolute;
+            background-color: rgba(50, 50, 50, 0.9);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+            font-weight: normal; 
+        }
+
+
+        th:hover .tooltip,
+        td:hover .tooltip {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            form label,
+            form input,
+            form select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='spark-logo.png') }}" alt="Spark Cloud Studio Logo">
+    </div>
+
+    <h1>Spark ShareSync Cost Calculator</h1>
+
+    <form id="calculator-form">
+        <div class="form-group">
+            <label for="storage_size">Storage Size</label>
+            <span id="storage_size_value">1TB</span>
+            <input type="range" id="storage_size" name="storage_size" class="accented" min="0.1" max="100" step="0.1" value="1">
+        </div>
+        <div class="form-group">
+            <label for="data_egress">Data Download/Transfer/Egress</label>
+            <span id="data_egress_value">0.3TB</span>
+            <input type="range" id="data_egress" name="data_egress" class="accented" min="0.1" max="100" step="0.1" value="0.3">
+        </div>
+        <div class="form-group">
+            <label for="usage_duration">Usage Duration</label>
+            <select id="usage_duration" name="usage_duration">
+                <option value="1" selected>Per Month</option>
+                <option value="12">Per Year</option>
+            </select>
+        </div>
+    </form>
+    
+
+    <div class="results">
+        <canvas id="costChart" style="max-width: 600px;"></canvas>
+        <table>
+            <thead>
+                <tr>
+                    <th>Spark ShareSync</th>
+                    <th>AWS</th>
+                    <th>Google Cloud</th>
+                    <th>MediaShuttle</th>
+                    <th id="google-drive-heading" class="google-drive">Google Drive</th>
+                    <th id="dropbox-heading" class="dropbox">Dropbox</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="spark_cost" style="background-color: #c6a4ea;">$0.00</td>
+                    <td id="aws_cost">$0.00</td>
+                    <td id="gcp_cost">$0.00</td>
+                    <td id="mediashuttle_cost">$0.00</td>
+                    <td id="googledrive_cost">$0.00</td>
+                    <td id="dropbox_cost">$0.00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+     <!-- Disclaimer Section -->
+     <div style="max-width: 630px; margin: 10px auto; font-size: 9px; color: #6a6a6a; text-align: left; line-height: 12px;">
+        <p>The information presented including references to Google Cloud, AWS, Dropbox, and Google Drive, are for informational purposes only. All trademarks, logos, and brand names are the property of their respective owners and are used solely for identification. We do not claim or imply ownership, affiliation, endorsement, or sponsorship by the referenced companies.
+
+            </p>The pricing and performance data provided are based on publicly available information. While every effort has been made to ensure accuracy, these figures may not reflect the most current information. Users are encouraged to verify pricing and terms directly with the respective service providers before making decisions.
+            
+        </p>We disclaim all liability for any errors or omissions in this information or for any loss or damage of any kind incurred as a result of reliance on this information.</p>
+    </div>
+
+    <script>
+        $(document).ready(() => {
+            const ctx = document.getElementById('costChart').getContext('2d');
+
+            const iconUrls = [
+                '/static/icons/spark.png',
+                '/static/icons/aws.png',
+                '/static/icons/google-cloud.png',
+                '/static/icons/mediashuttle.png',
+                '/static/icons/google-drive.png',
+                '/static/icons/dropbox.png'
+            ];
+
+            const iconImages = iconUrls.map(url => {
+                const img = new Image();
+                img.src = url;
+                return img;
+            });
+
+            const costChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['', '', '', '', '', ''], 
+                    datasets: [{
+                        label: 'Cost ($)',
+                        data: [0, 0, 0, 0, 0, 0],
+                        backgroundColor: ['#af69f5', '#ff6363', '#4fbf6f', '#f9a31d', '#2f704f', '#007bff'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    layout: {
+                        padding: {
+                            bottom: 30
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { display: false }, 
+                            grid: { drawOnChartArea: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    }
+                },
+                plugins: [{
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        const yAxis = chart.scales.y;
+
+                        iconImages.forEach((img, index) => {
+                            const x = xAxis.getPixelForTick(index) - 15; 
+                            const y = yAxis.bottom + 5; 
+                            ctx.drawImage(img, x, y, 30, 30); 
+                        });
+                    }
+                }]
+            });
+
+            const updateTooltips = () => {
+                if ($('#google-drive-heading').hasClass('google-drive-na')) {
+                    $('#google-drive-heading').append('<span class="tooltip">Not available for storage above 30TB</span>');
+                } else {
+                    $('#google-drive-heading .tooltip').remove();
+                }
+
+                $('.na-cell').each(function () {
+                    if ($(this).text() === 'X') {
+                        if (!$(this).find('.tooltip').length) {
+                            $(this).append('<span class="tooltip">Not available for storage above 30TB</span>');
+                        }
+                    } else {
+                        $(this).find('.tooltip').remove();
+                    }
+                });
+            };
+
+            const updateSliderLabels = () => {
+                const storageValue = $('#storage_size').val();
+                const egressValue = $('#data_egress').val();
+
+                $('#storage_size_value').text(`${storageValue}TB`);
+                $('#data_egress_value').text(`${egressValue}TB`);
+            };
+
+            const calculateAndUpdate = () => {
+                const formData = $('#calculator-form').serialize();
+                $.ajax({
+                    type: 'POST',
+                    url: '/calculate',
+                    data: formData,
+                    success: response => {
+                        const dropboxValue = response.dropbox_cost !== null ? response.dropbox_cost : 0;
+                        const googleDriveValue = response.googledrive_cost !== null ? response.googledrive_cost : 0;
+
+                        costChart.data.datasets[0].data = [
+                            response.spark_cost,
+                            response.aws_cost,
+                            response.gcp_cost,
+                            response.mediashuttle_cost,
+                            googleDriveValue,
+                            dropboxValue
+                        ];
+
+                        costChart.update();
+
+                        $('#spark_cost').text(`$${response.spark_cost.toFixed(2)}`);
+                        $('#aws_cost').text(`$${response.aws_cost.toFixed(2)}`);
+                        $('#gcp_cost').text(`$${response.gcp_cost.toFixed(2)}`);
+                        $('#mediashuttle_cost').text(`$${response.mediashuttle_cost.toFixed(2)}`);
+
+                        const googleDriveCell = $('#googledrive_cost');
+                        const dropboxCell = $('#dropbox_cost');
+
+                        if (response.googledrive_cost !== null) {
+                            googleDriveCell.text(`$${response.googledrive_cost.toFixed(2)}`);
+                            googleDriveCell.removeClass('na-cell');
+                            $('#google-drive-heading').removeClass('google-drive-na');
+                        } else {
+                            googleDriveCell.text('X');
+                            googleDriveCell.addClass('na-cell');
+                            $('#google-drive-heading').addClass('google-drive-na');
+                        }
+
+                        dropboxCell.text(`$${response.dropbox_cost.toFixed(2)}`);
+
+
+                        updateTooltips();
+                    }
+                });
+            };
+
+            $('#storage_size, #data_egress').on('input change', () => {
+                updateSliderLabels();
+                calculateAndUpdate();
+            });
+
+            $('#usage_duration').on('change', calculateAndUpdate);
+
+            updateSliderLabels();
+            calculateAndUpdate();
+        });
+    </script>
+</body>
+</html>
