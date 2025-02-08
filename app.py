@@ -22,7 +22,7 @@ def calculate():
     spark_base_cost = spark_base_cost_per_gb * storage_size_gb  
 
     if storage_size_tb > 0.1:
-        max_discount = 0.5  
+        max_discount = 0.35  
         discount_ramp_start = 0.1  
         discount_ramp_end = 2.0  
 
